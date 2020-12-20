@@ -73,6 +73,34 @@ mysvyglm1 <- svyglm(as.factor(new_mental_health) ~ age +feelings_life+as.factor(
 summary(mysvyglm1)
 ```
 
+# Abstract
+    
+  The purpose of this report is to evaluate whether people think they have a good mental health based on a collection of factors: age, feelings of life, if they worked last week and physical health. The data session summarizes the dataset used in this analysis, and key features are included. In the modeling session, the logistic regression modeling is used in analysing the probability of having a good mental health, and there are compelling findings coming out of the result. Interestingly, as for all five factors, they are all negatively correlated with evaluation of mental health, which helps the society to better predict one’s mental health.
+
+**Key words**: logistic modeling, logistic regression estimation, negative correlation
+
+**code and data supporting this analysis is available at:** https://github.com/Catherine1124k/Towards-an-analysis-of-self-rated-mental-health
+
+
+# Introduction
+Mental health involves an individual's ability to enjoy life and to create a balance between real life and behavior. Modern people pay more and more attention to their physical health, but mental health is a problem that many people will ignore. According to a study, there is an intrinsic correlation between people's psychological activities and their physiological functions. However, there is a standard for people's physical health, while the standard for a person's mental health is far less specific and objective, in other words, there is no a clear standards to determine what is a good mental health.
+
+The 2017 GSS is a sample survey with cross-sectional design. The target population are all non-institutionalized persons 15 years of age and older, living in the 10 provinces of Canada. The main content is to measure social changes related to living conditions and provide data to inform specifific policy issues. The method for sampling was the stratification, each of the ten provinces were divided into strata, and this will give us an unbiased sample. A simple random sample without replacement of records was next performed in each stratum which ensures each unit has equal probability of being selected. The dataset can be considered as a large data, and it is very representative of the population due to stratification sampling method. 
+ 
+This study paid particular attention to the mental health with respect to the numeric variables age, feelings_life and worked_last_week, and one categorical variable self_rated_health, and will highlight major strengths and weaknesses while offering some discussion for raw data. The resulting model would be assessed to see how the response incorporated and had been influenced by four predictors. Finally, a recommended regression formula will be made about how mental health of lives could be measured to further meet the needs of people. 
+
+The aim of this study was primarily to determine whether there were some factors that could contribute significantly to the mental health of people. If so, it would be of interest to be able to define which factor can best confirm such measurement. The goal of the study was to use these factors as associated with 2017 GSS to develop a standardized tool for the evaluation of probability of people have a good mental health.
+
+
+\newpage
+# Data
+
+## Key features of the data: 
+
+This data is from the 2017 General Social Survey (GSS): Families Cycle 31, provided by Statistics Canada under the terms of the Data Liberation. It was collected via computer assisted telephone interviews, and all the data output was transmitted electronically to Ottawa. There are 81 variables in the database. Some variables are straightforward, and some of them were created by combining two or three variables. 
+
+As self rated mental health identified a large number of factors and characteristics, variables that were of particular intuitionistic interest were selected by the prior to analysis. The `self_rated_mental_health` was chosen to be the response variable and then created a ‘new mental health’ which was dummied so as to only express the probability of having a good mental health. As variable `new_mental_health` is a categorical one, it has two levels: `good`(i.e., `self_rated_mental_health` is "Good" or "Very good" or "Excellent") and `not so good`.
+
 ```{r self rated mental health bar plot Appendix A, echo=FALSE, message=FALSE, warning=FALSE}
 data$self_rated_mental_health <- as.factor(data$self_rated_mental_health)
 data_health <- data%>% group_by(self_rated_mental_health) %>% summarise(count = n())
@@ -84,6 +112,7 @@ data_health %>%
   geom_text(aes(label= `count`, x=self_rated_mental_health, y=`count`*1.03), colour="black")
 ```
 
+**Figure1:** This is a bar chart of the number of samples which were chosen for each level of the self rated mental health for the GSS 2017 survey. The total number of samples was 19989, and over 60% of samples had high degrees of mental health.
 
 ```{r new feel pie plot, echo=FALSE, message=FALSE, warning=FALSE}
 # Pie Chart from data frame with Appended Sample Sizes
@@ -93,9 +122,111 @@ pie(mytable, labels = lbls,
    main="Figure 2: Number of Observations in Each Level of New_Mental_Health")
 ```
 
+**Figure2:** This pie chart shows the number of samples at each level after we define the new variable--- `new_mental_health`, as it divided samples into good mental health and not so good mental health groups. From the chart, there were far more people who have good mental health than not so good ones.
+
+The numeric variables `age`, `feelings_life` and `worked_last_week`, and one categorical variable `self_rated_health` were predictors. The variable `average_hours_worked` is very similar to variable `worked_last_week`, the reason for choosing `worked_last_week` over `average_hours_worked` is that we are more interested in the current level measure, as people tend to rate their mental health by their recent feelings. The variables categorized various aspects of study objects, including identifying locational features of the living conditions, degree of the economy of objects, as well as classifying the type of objects.(detailed data summry information in Appendix A) 
+
+It is also worth mentioning that since each of the variables in the data were used to identify the probability of good mental health, there was the possibility of collinearity between the variables (i.e. a number of variables measured common characteristics of self rated mental health). 
+
+
+
+
+## Discussion of the questionnaire:  
+
+The questionnaire for 2017 GSS contained 460 questions, meeting two key objectives: monitoring the change of living standard and well-being of Canadians over time and gathering the data of specified social policy issues. Details of the questions in the questionnaire can be found in (Appendix B).
+What is also worth mentioning is the underlying problems of the questionnaire. For telephone surveys, non-response is already increasingly prevalent. Unfortunately, the length of the GSS 2017 questionnaire raised the probability of non-response. 
+Since the GSS program was started from 1985, the questionnaire contained two types of questions: existing questions and new questions. Both of these two kinds of questions were tested by Statistic Canada’s Questionnaire Design Resource Centre. Though this increased the reliability of the questionnaire, and the pilot test could be included before finalizing the questions. The pilot test is able to reveal the potential problem when conducting the survey in the real world with low cost. And this can be considered as a good side of the questionnaire. 
+
+
+## Discussion of the methodology: 
+
+The target population for the 2017 GSS included all non-institutionalized persons 15 years of age and older in 10 provinces of Canada. As for the stratification for sampling, each of the ten provinces were divided into strata. Details of stratified sampling can be found in (Appendix C). The survey frame was created using two different components: lists of telephone numbers in use available to Statistics Canada from various sources; the Address Register: list of all dwellings within the ten provinces. The word “record” will refer to the grouping of telephone numbers that consists of our sampling unit on the survey frame. 
+The sampling approach is that each record in the survey frame was assigned to a stratum within its province. A simple random sample without replacement of records was next performed in each stratum. The sample formed by the above approach has the actual number of respondents to be 20,602. From this approach, some trade-offs may occur as it is very time consuming for gathering survey results. 
+The extent of non-response varies from partial non-response (failure to answer one or a few questions) to total non-response. Total non-response was handled by adjusting the weight of households who responded to the survey to compensate for those who did not respond. And partial non-response was included in the sample, this is one downside of the data. 
+
+The result of the logistic regression model is shown as below, in the table below:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(summary(mysvyglm1)$coefficient, caption = "Logistic Regression Model Result")
 ```
+
+Interpreting the p_value from the model, one can see that the p_value is relatively small compared with a predetermined significance level of 5% except for the one associated with ‘Excellent’ `self_rated_health` . With such low p_values, a moderate to strong relationship between the log odds of having good mental health and all predictor variables(`age`, `feelings_life`, `worked_last_week`, and `self_rated_health`) can be established. 
+
+In this model for the probability of having good mental health, the intercept with value -0.365 . In terms of age, for every additional year increase in age, it is expected that the log adds of having good mental health to decrease by 0.0289(i.e., probability of having good mental health is negatively related with age). 
+
+Similarly for estimates associated with `feelings_life` and `worked_last_week`, the probability of having good mental health is also negatively related with those two predictor variables. For every additional unit increase in `feelings_life`, it is expected that the log adds of having good mental health to decrease by 0.49. And for more people worked last week, it is expected that the log adds of having good mental health to decrease by 0.032. “Dummy” variable is used for categorical variable self_rated_health, and if the person is in self_rated_health which is “Excellent”, then it is expected that the log adds of having good mental health to decrease by 1.71. However, for self rated mental health “Fair” and “Poor”, it is expected that the log adds of being to increase by 1.06 and 1.18 respectively. It is shown that self_rated_health is negatively related with having good mental health, it suggested that if a person feels more satisfied about life, then he or she is less likely to be having a better mental health.
+
+\newpage
+
+
+# Model
+
+In this section, we will discuss the logistic model we used to analysis Canadians’ self rated mental health, Design-Based inference in the modeling, and model assumptions and diagnostics. 
+
+The response variable we want to analysis is the `new mental health` categorical variable. Since this variable has two levels, `good` and not `so good`, the logistic model was the best option to apply on the dataset. The logistic regression model is a statistical model that use the logistic function to model a binary response variable. In the content of `new mental health`, the logistic model is predicting whether people having a good mental health or not. 
+
+R software of version 4.0.2 was used to build the model. Considering how GSS data was collected, directly employing the logistic model on the data is not enough. Therefore, we need to add the design-based feature into the model to complete the logistics model. The function svydesign() in the `survey` package is used to including design method used by General Social Study. In the svydesign() function, we specified that the population is finite. After the design method was established and stored in the R, two logistic models were built in order to choose better one. The first one is with five variables: `age`, `feelings_life`, `self_rated_health`, `worked_last_week` and `living_arrangement`, while the second has one less variable `living_arrangement`.
+
+
+*First Model:*
+$$
+log(\frac{p}{1-p}) = b_{0} + b_{1}\space age+ b_{2}\space feelings\_life +  b_{3}\space worked\_last\_week + b4 living\_arrangement + 
+$$
+$$
+b5 Self\_rated\_health\_group1 + b6 Self\_rated\_health\_group2 + b7 Self\_rated\_health\_group3 + 
+$$
+$$
+b8 Self\_rated\_health\_group4 +  b9 Self\_rated\_health\_group5 
+$$
+
+*Second Model:*
+$$
+log(\frac{p}{1-p}) = b_{0} + b_{1}\space age+ b_{2}\space feelings\_life +  b_{3}\space worked\_last\_week + b4 Self\_rated\_health\_group1 + 
+$$
+
+$$
+ b5 Self\_rated\_health\_group2 + b6 Self\_rated\_health\_group3 + b7 Self\_rated\_health\_group4 + 
+$$
+$$
+b8 Self\_rated\_health\_group5
+$$
+
+
+*Label:*
+The $b_{n}$ here are respenting the coefficients before each predictors. Age, feelings_life, and worked_last_week are same from the dataset.
+$Self\_rated\_health\_group_{1}$ is the evaluation: Excellent
+$Self\_rated\_health\_group_{2}$ is the income family level: Fair
+$Self\_rated\_health\_group_{3}$ is the income family level: Good
+$Self\_rated\_health\_group_{4}$ is the income family level: Poor
+$Self\_rated\_health\_group_{5}$ is the income family level: Very good.
+
+In the first model, the variable `living_arrangement` was added at the beginning because intuitively, a person's living environment has a certain impact on the cultivation of mental health, because a comfortable living environment will help people build a good mental health. However, when put this variable into the model, it is found that its p-value is very big, which means that the `living_arrangement` is not a significant factor in the impact of individual mental health, so this factor is removed in the second model.
+
+As `age` in the dataset was recorded as double, a subcategory belonging to number, `age` was keep as how it was in the logistic model. The variable `feelings_life` is the satisfaction of people’s life reported by the respondent. Not only the satisfaction of people’s life reported by the respondent is a numerical variable, but since the variable is not grouped, `feelings_life` used as numerical variable in the logistic regression model. Same for the `worked_last_week` (If the respondent worked last week) Here, if the response is yes, then the result will turn out to be 1, otherwise is 0. However, different from other three numerical variable, `self_rated_health` is a grouped variable with 5 different levels. Recall that the health information recorded in the GSS dataset was obtained by summing the person weights. Therefore, it would be unreasonable to convert `self_rated_health` into numerical variable by simply picking the mean from each health level. To concluded, there are three numerical predictors in the first model, and two categorical variable whereas the second logistic model have three numerical variable and one categorical variable income_family. 
+
+For both two model, the design method, `gss.design` was included to adding survey sampling information. After using `svyglm()` function to get the result of each two model, we compared the accuracy of two models. For the first model, the accuracy is 0.9280; the second model has the accuracy of 0.9281. As the accuracy for the two model is very similar, the sensitivity and specificity rate for two models are compared. It is surprisingly to noticed that for the first model, the predicting results for all observations are `good`. This indicates that the first model is not good at predicting people who might feel `not so good` with their current mental health. Due to the fact that it is more important to study why some Canadians feel not so good about their mental health, the second model is chosen as the final model, instead the first model. 
+
+After finalizing variables included in the logistic regression model, it is crucial to conduct the model checks and diagnostics. The model-checks include testing the linear relationship between continuous predictor variables and the logit of the outcome, and whether multicollinearity lies between predictors. To testify the relationship between the numerical predictors and `new_mental_health`, we used the scatter plot to visualize the distribution of the data. Three scatter plots suggested that `feelings_life`, `age`, `worked_last_week` all have a linear relationship with the response variable. (Appendix D) The function `vif()` in the Car package is used to compute the variance inflation factor. Variance inflation factor represents how much larger the variance is due to the multicollinearity. The results of the four predictors are around 1 to 2 (Appendix F), suggesting that there is no multicollinearity between the predictors. As the logistic regression model has been tested that it satisfies the model assumptions, the influential observations are found to check their influence on the logistic model. Using `augment()` built in the `broom` package, observations with ten largest Cook’s distance were listed and plotted. As the Cook’s distance of these observations are much smaller than the 50th percentile of the F distribution with 4 and (19989 – 4 – 1) degrees of freedom, the observation should be included in the logistic model (details in Appendix E). 
+
+
+# Result
+
+
+The result of the logistic regression model is shown in table 1 above.
+
+
+By combining the coefficients listed in the table, the following logitic function was summarized to present the model result. 
+
+$$
+log(\frac{p}{1-p}) = 3.13 - 0.029\space age - 0.487\space feelings\_life - 0.376 \space worked\_last\_week -
+$$
+$$
+1.71\space Self\_rated\_mental\_health\_group\_1 + 1.062\space Self\_rated\_mental\_health\_group\_2 - 0.449\space Self\_rated\_mental\_health\_group\_3 +
+$$
+$$
+1.179\space Self\_rated\_mental\_health\_group\_4 - 1.324\space Self\_rated\_mental\_health\_group\_5
+$$
+
+The following figures showed how the probability of the Canadian felt good about their current life varies as the predictors(`age`, `feelings_life`, `self_rated_health` and `worked_last_week`).
 
 ```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
 par(mfrow = c(1, 2))
@@ -103,6 +234,8 @@ plot(new_mental_health ~ age +feelings_life+as.factor(self_rated_health)+worked_
      pch = "|",
      main = "Figure 3: Model Result")
 ```
+
+**Figure 3:** These four plots are demonstrating how the probability obtained from the logistic model varies as the predictors value changes. The X axis is representing the values for numerical predictors(`age`, `feelings_life`, `worked_last_week`). As for the categorical predictor, `self_rated_health`, the x-axis is divided into 5 bar, indicating 5 different mental health groups. The y-axis shows the probability of Canadians having good mental health. The dark-gray area represents the proportion of people having not so good mental health within that group, while the light area is for people having good mental health. By viewing the change of the dark-grey area, the general relationship between `new mental health` and the predictors.
 
 ```{r include=FALSE}
 mysvyglm1.probs <- predict(mysvyglm1, type="response")
@@ -134,6 +267,57 @@ table(mysvyglm.classes, data1$new_mental_health)
 mean(mysvyglm.classes == data1$new_mental_health)
 
 ```
+
+\newpage
+
+# Discussion
+# Summary
+
+In this report, we demonstrate that the probability of having good mental health is negatively correlated with age, physical health, if people worked last week, and feelings of life. Under the logistic regression model, we built a tool for evaluating the probability of having good mental health based on above four factors. This potential can be used in Canada to assist the social changes related to living conditions and provide data to inform specific policy issues, which is the primary objective of the General Social Survey. It is hoped that in the future work, one can extend the model globally based on more global data. 
+
+In this session, we will focus on discussing the main results of the model and interpretation of it. The following plots help us visualizing the dataset used in the model. First of all, Figure 1 shows the dataset from one variable `self_rated_mental_health`’s perspective, which is our main focus variable from the dataset. The variable `self_rated_mental_health` has 5 levels which are “Excellent”, “Very good”, “Good”, “Fair”, and “Poor”. We are interested in determining the probability of a person with good mental health(i.e., value of `self_rated_mental_health` is higher than “Good”) given predictor variables(i.e., `age`, `feelings_life`, `self_rated_health`, and `worked_last_week`). Moreover, Figure 2 is a pie chart showing that 60% of people in the data have a value higher than “Good”, and the rest 40% of them have a “Fair” or “Poor” mental health. Regarding possible bias of the dataset, one can find that the distribution of `self_rated_mental_health` is left skewed, with few values far to the left and closer to zero. Skewness of the data may imply the dataset is not representative enough if assuming the distribution of `self_rated_mental_health` is uniform. The logistic regression model results are shown in the previous result session.
+
+It is stated by James, G. (2013) that the estimated intercept is typically not of interest; its main purpose is to adjust the average fitted probabilities to the proportion of ones in the data. So in this model for the probability of having good mental health, the intercept with value -0.365 . In terms of age, for every additional year increase in age, it is expected that the log adds of having good mental health to decrease by 0.0289(i.e., probability of having good mental health is negatively related with age). 
+
+Similarly for estimates associated with `feelings_life` and `worked_last_week`, the probability of having good mental health is also negatively related with those two predictor variables. For every additional unit increase in `feelings_life`, it is expected that the log adds of having good mental health to decrease by 0.49. And for more people worked last week, it is expected that the log adds of having good mental health to decrease by 0.032. “Dummy” variable is used for categorical variable `self_rated_health`, and if the person is in `self_rated_health` group 1, then it is expected that the log adds of having good mental health to decrease by 1.71. However, for self rated mental health group 2 and 4, it is expected that the log adds of being to increase by 1.06 and 1.18 respectively. It is shown that `self_rated_health` is negatively related with having good mental health, it suggested that if a person feels more satisfied about life, then he or she is less likely to be having a better mental health.
+
+To sum up all relationships between predictor variables and the probability of having good mental health, it is interesting that all four variables are negatively correlated with the log odds of having good mental health. From the model, one can learn that if the person worked more, had better physical health, felt more satisfied about life and is older, he or she tends to have worse mental health. In reality, having more work is associated with higher pressure and trivial matters, which will lead to worse mental health. When people get older, they suffer from a lot of diseases, so they have anxiety about them. Also, they will lose interest in life and feel lonely, and will also lead to bad mental health. It is very interesting when talking feeling of life satisfaction and physical health into consideration, it has a negative impact on having a good mental health. Perhaps, having a high satisfaction about life and a good body will let people ignore the importance of the mental health and not having a good mental health eventually.
+
+
+## Weakness & Next Steps: 
+
+Any missing values in the data were imputed as “Not Stated” or “Don’t Know”. While the assumption under which these imputations were conducted was probably reasonable, it may have been useful to perform a sensitivity analysis to determine whether such an imputation had a drastic effect on the results of the analyses. Moreover, here are some variables that have an impact on mental health in real life, such as individual's marital status, living environment and educational background, etc. However, because the values were too small in the p-test process, they were considered as insignificant variables, so they were deleted when the model was built. However, perhaps these variables have some influence on the model, and if deleted, some information may be missed.
+
+This model will represent the small world to an extent of people in Canada. In terms of the whole world, this model may not perform well, as different countries have different living conditions and measurements. It is limited to the society of Canada, and may not be able to use it globally. As for future work, opportunity is there to gather more information and data from different countries across the world. Therefore, future opportunities can focus on extending the model globally.
+
+
+
+
+\newpage
+
+# Reference
+
+**1.** Data source: 2017 General Social Survey (GSS): Families Cycle 31, provided by Statistics Canada under the terms of the Data Liberation
+
+**2.** Gss31_user_Guide of 2017 General Social Survey (GSS): Families Cycle 31 https://sda-artsci-utoronto-ca.myaccess.library.utoronto.ca/sdaweb/dli2/gss/gss31/gss31/more_doc/GSS31_User_Guide.pdf
+
+
+**3.** Wu, C., & Thompson, M. E. (2020). Sampling Theory and Practice (ICSA Book Series in Statistics) (1st ed. 2020 ed.). Springer.
+
+**4.** James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An Introduction to Statistical Learning: with Applications in R (Springer Texts in Statistics) (1st ed. 2013, Corr. 7th printing 2017 ed.). Springer.
+
+**5.** (2018, March 11). Logistic Regression Assumptions and Diagnostics in R. Articles - STHDA. http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
+
+**6.** Population Data Source: Statistics Canada. Table 17-10-0005-01 Population estimates on July 1st, by age and sex  DOI: https://doi.org/10.25318/1710000501-eng.
+
+
+\newpage
+
+# Appendix
+
+<font size = 4> **Appendix A** </font>
+
+**Data Summary for Variables Used In the Model:**
 
 ```{r echo=FALSE}
 kable(data1%>%dplyr::select(c(-1:2))%>%summary(), 
@@ -173,6 +357,35 @@ figure <- ggarrange(b1, b2, b3,
 figure
 ```
 
+<font size = 4> **Appendix B** </font>
+
+
+**Details on questionnaire of the survey:**
+
+
+The 460 questions could be classified into 14 different categories, such as the entry component, family origins, conjugal history, children of respondents, and so on. The questions listed in the questionnaire followed a logical order. Respondents were first asked to provide the date of birth and then asked for other entry information. Since the targeting population of the general social survey were Canadians over 15 years old, the first question was conducive in increasing the efficiency of conducting the survey, as getting rid of the substandard respondents. In addition, the questionnaire was designed to contain questions asking conjugal history. Data such as current legal marital status of the respondent, the respondent's spouse or partner’s date of birth and marital status prior to the union, and also the children's information for each union were obtained. The diverse data, which are impossible using other sources, allows analysis to be conducted from different perspectives. 
+
+The intended respondent might speak with the interviewer, but refuse to consent to respond, when they learned about the time needed to answer about 400 questions. It is also possible that they may consent to respond, and begin the interview, but are not able to finish all the questions due to the time limit. Therefore, the number of questions in the questionnaire might cause certain errors.
+
+
+\newpage
+
+
+
+<font size = 4> **Appendix C** </font>
+
+**Details on methodology of dataset:**
+
+Stratification: Many of the Census Metropolitan Areas1 (CMAs) were each considered separate strata for St. John’s, Halifax, Saint John, Montreal, Quebec City, Toronto, Ottawa, Hamilton, Winnipeg, Regina, Saskatoon, Calgary, Edmonton and Vancouver. All CMAs not on this list are located in Quebec, Ontario and British Columbia, with the exception of Moncton. Three more strata were formed by grouping the remaining CMAs (except Moncton) in each of Quebec, Ontario and British Columbia. Finally, the non-CMA areas of each of the ten provinces were also grouped to form ten more strata, for a total of 27 strata. Moncton was added to the non-CMA stratum for New Brunswick. For each province, minimum sample sizes were determined that would ensure certain estimates would have acceptable sampling variability at the stratum level. 
+
+
+
+<font size = 4> **Appendix D** </font>
+
+
+**Linearity between the Predictors and Response:**
+Figure4: Here were three scatter plots which correspond to the linear relationship between numerical variables, specifically were `age`, `feeling of life`, and `worked last week`, and the response variables. The second plot showed that the feeling of life had a strong linear relationship with the response variable. However, for the first and the third plots was a step function, fit to the qualitative variable `age` and the `worked_last_week`.
+
 ```{r linear realtionship, echo=FALSE, message=FALSE, warning=FALSE}
 # Select only numeric predictors
 mydata <- data1 %>% dplyr::select_if(is.numeric)
@@ -193,6 +406,15 @@ ggplot(mydata, aes(logit, predictor.value))+
        caption="Figure 5")
 ```
 
+\newpage
+
+<font size = 4> **Appendix E** </font>
+
+
+**Influential Points and Cook's Distance:**
+
+Figure 5: This plot illustrated cook distances for leverage points of the samples, and picked out the three points with largest cook distances. These three points sit a far distance from the center of all sample predictors.
+
 ```{r Cooks, echo=FALSE}
 
 # cook distance for leverage points
@@ -201,10 +423,18 @@ plot(mysvyglm1, which = 4, id.n = 10, main = "Observations with their Cook's Dis
 model.data <- augment(mysvyglm1) %>% mutate(index = 1:n())
 ```
 
+Table 4: This table displayed three  points which have the three largest cook's distance in the entire dataset. These values demonstrated that all the points in the dataset are not influtial points that effect the model preforming.
+
+
 ```{r Cooks D, echo=FALSE}
 # Pick out the three points with largest cook
 kable(model.data %>% dplyr::select(c(13, 12)) %>% top_n(3, .cooksd), caption = "Three Points with Largeat Cook's Distance")
 ```
+
+\newpage
+
+
+Figure 6: This is a plot of residuals versus predicted (or fitted) values for the GSS2017 datasets. A strong pattern in the residuals indicates non-linearity in the data.  Here, the residual plot showed no discernible pattern which provides a strong indication of linearity in the data, for both good and not so good samples.
 
 ```{r Cooks Distance, echo=FALSE}
 ggplot(model.data, aes(index, .std.resid)) +
@@ -213,7 +443,18 @@ ggplot(model.data, aes(index, .std.resid)) +
        caption="Figure 7")
 ```
 
+<font size = 4> **Appendix F** </font>
+
+
+**Variance Inflation Vector for Predictors:**
+
+
+Table 5: the variance inflation vectors for each predictor are listed. The result indicates that there is not multicollinearity between the variables, as the VIFs for predictors are all smaller than 5.
+
 ```{r multicollinearity, echo=FALSE}
 # Check the Multi-collinearity
 kable(vif(mysvyglm1), caption = "Variance Inflation Vector")
 ```
+<font size = 4> **Appendix G** </font>
+
+**Github Repo Link:** https://github.com/Catherine1124k/Towards-an-analysis-of-self-rated-mental-health
