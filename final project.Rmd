@@ -288,6 +288,8 @@ To sum up all relationships between predictor variables and the probability of h
 
 Any missing values in the data were imputed as “Not Stated” or “Don’t Know”. While the assumption under which these imputations were conducted was probably reasonable, it may have been useful to perform a sensitivity analysis to determine whether such an imputation had a drastic effect on the results of the analyses. Moreover, here are some variables that have an impact on mental health in real life, such as individual's marital status, living environment and educational background, etc. However, because the values were too small in the p-test process, they were considered as insignificant variables, so they were deleted when the model was built. However, perhaps these variables have some influence on the model, and if deleted, some information may be missed.
 
+Here, the predictor `self_rated_mental_health` was rated by the responsers themselves, and the outcomes were just the scores from 1 to 10 which were subjectivity in this measurement, and this may effect the result of our final model since the numbers may not accurate to their exact mental health level.
+
 This model will represent the small world to an extent of people in Canada. In terms of the whole world, this model may not perform well, as different countries have different living conditions and measurements. It is limited to the society of Canada, and may not be able to use it globally. As for future work, opportunity is there to gather more information and data from different countries across the world. Therefore, future opportunities can focus on extending the model globally.
 
 
