@@ -223,9 +223,11 @@ After finalizing variables included in the logistic regression model, it is cruc
 
 
 The result of the logistic regression model is shown as below, in the table below:
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(summary(mysvyglm1)$coefficient, caption = "Logistic Regression Model Result")
 ```
+
 Interpreting the p_value from the model, one can see that the p_value is relatively small compared with a predetermined significance level of 5% except for the one associated with ‘Excellent’ `self_rated_health` . With such low p_values, a moderate to strong relationship between the log odds of having good mental health and all predictor variables(`age`, `feelings_life`, `worked_last_week`, and `self_rated_health`) can be established. 
 
 In this model for the probability of having good mental health, the intercept with value -0.365 . In terms of age, for every additional year increase in age, it is expected that the log adds of having good mental health to decrease by 0.0289(i.e., probability of having good mental health is negatively related with age). 
