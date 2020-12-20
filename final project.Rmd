@@ -19,6 +19,9 @@ library(broom)
 library(car)
 library(survey)
 library(ggplot2)
+library(boot)
+library(table1)
+library(rvest)
 
 ```
 
@@ -97,7 +100,6 @@ This study paid particular attention to the mental health with respect to the nu
 The aim of this study was primarily to determine whether there were some factors that could contribute significantly to the mental health of people. If so, it would be of interest to be able to define which factor can best confirm such measurement. The goal of the study was to use these factors as associated with 2017 GSS to develop a standardized tool for the evaluation of probability of people have a good mental health. Also, in this report, the analysis was conducted in @R and figures were produced using the package @ggplot2.
 
 
-\newpage
 # Data
 
 ## Key features of the data: 
@@ -124,8 +126,8 @@ data_health %>%
 # Pie Chart from data frame with Appended Sample Sizes
 mytable <- table(data1$new_mental_health)
 lbls <- paste(names(mytable), "\n", mytable, sep="     ")
-pie(mytable, labels = lbls, 
-   main="Figure 2: Number of Observations in Each Level of New_Mental_Health")
+pie(mytable, labels = lbls,
+    main="Figure 2: Number of Observations in Each Level of New_Mental_Health")
 ```
 
 **Figure2:** This pie chart shows the number of samples at each level after we define the new variable--- `new_mental_health`, as it divided samples into good mental health and not so good mental health groups. From the chart, there were far more people who have good mental health than not so good ones.
@@ -134,17 +136,35 @@ The numeric variables `age`, `feelings_life` and `worked_last_week`, and one cat
 
 It is also worth mentioning that since each of the variables in the data were used to identify the probability of good mental health, there was the possibility of collinearity between the variables (i.e. a number of variables measured common characteristics of self rated mental health). 
 
+## Limitations of the data: 
 
-The result of the logistic regression model is shown as below, in the table below:
+Any missing values in the data were imputed as “Not Stated” or “Don't Know”. While the assumption under which these imputations were conducted was probably reasonable, it may have been useful to perform a sensitivity analysis to determine whether such an imputation had a drastic effect on the results of the analyses. 
+ 
+
+## Strengths of the data:  
+
+The method for sampling was the stratification, each of the ten provinces were divided into strata, and this will give us an unbiased sample. A simple random sample without replacement of records was next performed in each stratum which ensures each unit has equal probability of being selected. The dataset can be considered as a large data, and it is very representative of the population due to stratification sampling method. 
+
+## Discussion of the questionnaire:  
+
+The questionnaire for 2017 GSS contained 460 questions, meeting two key objectives: monitoring the change of living standard and well-being of Canadians over time and gathering the data of specified social policy issues. Details of the questions in the questionnaire can be found in (Appendix B).
+What is also worth mentioning is the underlying problems of the questionnaire. For telephone surveys, non-response is already increasingly prevalent. Unfortunately, the length of the GSS 2017 questionnaire raised the probability of non-response. 
+Since the GSS program was started from 1985, the questionnaire contained two types of questions: existing questions and new questions. Both of these two kinds of questions were tested by Statistic Canada’s Questionnaire Design Resource Centre. Though this increased the reliability of the questionnaire, and the pilot test could be included before finalizing the questions. The pilot test is able to reveal the potential problem when conducting the survey in the real world with low cost. And this can be considered as a good side of the questionnaire. 
+
+
+## Discussion of the methodology: 
+
+The target population for the 2017 GSS included all non-institutionalized persons 15 years of age and older in 10 provinces of Canada. As for the stratification for sampling, each of the ten provinces were divided into strata. Details of stratified sampling can be found in (Appendix C). The survey frame was created using two different components: lists of telephone numbers in use available to Statistics Canada from various sources; the Address Register: list of all dwellings within the ten provinces. The word “record” will refer to the grouping of telephone numbers that consists of our sampling unit on the survey frame. 
+The sampling approach is that each record in the survey frame was assigned to a stratum within its province. A simple random sample without replacement of records was next performed in each stratum. The sample formed by the above approach has the actual number of respondents to be 20,602. From this approach, some trade-offs may occur as it is very time consuming for gathering survey results. 
+The extent of non-response varies from partial non-response (failure to answer one or a few questions) to total non-response. Total non-response was handled by adjusting the weight of households who responded to the survey to compensate for those who did not respond. And partial non-response was included in the sample, this is one downside of the data. 
+
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-kable(summary(mysvyglm1)$coefficient, caption = "Logistic Regression Model Result")
+tbl_1<-table1(~ age+feelings_life+as.factor(self_rated_health)+worked_last_week+as.factor(income_family)+as.factor(living_arrangement), data=data1)
+kable(as.data.frame(read_html(tbl_1) %>% html_table(fill=TRUE)),caption = "Descriptive statistics")
 ```
 
-Interpreting the p_value from the model, one can see that the p_value is relatively small compared with a predetermined significance level of 5% except for the one associated with ‘Excellent’ `self_rated_health` . With such low p_values, a moderate to strong relationship between the log odds of having good mental health and all predictor variables(`age`, `feelings_life`, `worked_last_week`, and `self_rated_health`) can be established. 
-
-In this model for the probability of having good mental health, the intercept with value -0.365 . In terms of age, for every additional year increase in age, it is expected that the log adds of having good mental health to decrease by 0.0289(i.e., probability of having good mental health is negatively related with age). 
-
-Similarly for estimates associated with `feelings_life` and `worked_last_week`, the probability of having good mental health is also negatively related with those two predictor variables. For every additional unit increase in `feelings_life`, it is expected that the log adds of having good mental health to decrease by 0.49. And for more people worked last week, it is expected that the log adds of having good mental health to decrease by 0.032. “Dummy” variable is used for categorical variable self_rated_health, and if the person is in self_rated_health which is “Excellent”, then it is expected that the log adds of having good mental health to decrease by 1.71. However, for self rated mental health “Fair” and “Poor”, it is expected that the log adds of being to increase by 1.06 and 1.18 respectively. It is shown that self_rated_health is negatively related with having good mental health, it suggested that if a person feels more satisfied about life, then he or she is less likely to be having a better mental health.
+This is a table of baseline characteristics of the data1 which contains variables `age`, `feelings_life`, `self_rated_health`, `living_arrangement`, `worked_last_week` and `income_family`. According to the table, the distribution of each of these variables is pretty much average, except `self_rated_health` and `living_arrangement`. There was a big gap between people who thought they have a good physical health than bad ones, and most of them only live with spouse instead of living without spouse. this is interesting, since these results may lead to a trend that almost everyone has a very good mental health, but the reality is not as ideal as this table showd.
 
 \newpage
 
@@ -202,8 +222,15 @@ After finalizing variables included in the logistic regression model, it is cruc
 # Result
 
 
-The result of the logistic regression model is shown in table 1 above.
+The result of the logistic regression model is shown as below, in the table below:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(summary(mysvyglm1)$coefficient, caption = "Logistic Regression Model Result")
+```
+Interpreting the p_value from the model, one can see that the p_value is relatively small compared with a predetermined significance level of 5% except for the one associated with ‘Excellent’ `self_rated_health` . With such low p_values, a moderate to strong relationship between the log odds of having good mental health and all predictor variables(`age`, `feelings_life`, `worked_last_week`, and `self_rated_health`) can be established. 
 
+In this model for the probability of having good mental health, the intercept with value -0.365 . In terms of age, for every additional year increase in age, it is expected that the log adds of having good mental health to decrease by 0.0289(i.e., probability of having good mental health is negatively related with age). 
+
+Similarly for estimates associated with `feelings_life` and `worked_last_week`, the probability of having good mental health is also negatively related with those two predictor variables. For every additional unit increase in `feelings_life`, it is expected that the log adds of having good mental health to decrease by 0.49. And for more people worked last week, it is expected that the log adds of having good mental health to decrease by 0.032. “Dummy” variable is used for categorical variable self_rated_health, and if the person is in self_rated_health which is “Excellent”, then it is expected that the log adds of having good mental health to decrease by 1.71. However, for self rated mental health “Fair” and “Poor”, it is expected that the log adds of being to increase by 1.06 and 1.18 respectively. It is shown that self_rated_health is negatively related with having good mental health, it suggested that if a person feels more satisfied about life, then he or she is less likely to be having a better mental health.
 
 By combining the coefficients listed in the table, the following logitic function was summarized to present the model result. 
 
@@ -217,7 +244,7 @@ $$
 1.179\space Self\_rated\_mental\_health\_group\_4 - 1.324\space Self\_rated\_mental\_health\_group\_5
 $$
 
-The following figures showed how the probability of the Canadian felt good about their current life varies as the predictors(`age`, `feelings_life`, `self_rated_health` and `worked_last_week`).
+The following figures showed how the probability of the Canadian felt good about their mental health varies as the predictors(`age`, `feelings_life`, `self_rated_health` and `worked_last_week`).
 
 ```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
 par(mfrow = c(1, 2))
@@ -262,22 +289,11 @@ mean(mysvyglm.classes == data1$new_mental_health)
 \newpage
 
 # Discussion
-# Summary
+
+## Summary
 
 In this report, we demonstrate that the probability of having good mental health is negatively correlated with age, physical health, if people worked last week, and feelings of life. Under the logistic regression model, we built a tool for evaluating the probability of having good mental health based on above four factors. This potential can be used in Canada to assist the social changes related to living conditions and provide data to inform specific policy issues, which is the primary objective of the General Social Survey. It is hoped that in the future work, one can extend the model globally based on more global data. 
 
-## Discussion of the questionnaire:  
-
-The questionnaire for 2017 GSS contained 460 questions, meeting two key objectives: monitoring the change of living standard and well-being of Canadians over time and gathering the data of specified social policy issues. Details of the questions in the questionnaire can be found in (Appendix B).
-What is also worth mentioning is the underlying problems of the questionnaire. For telephone surveys, non-response is already increasingly prevalent. Unfortunately, the length of the GSS 2017 questionnaire raised the probability of non-response. 
-Since the GSS program was started from 1985, the questionnaire contained two types of questions: existing questions and new questions. Both of these two kinds of questions were tested by Statistic Canada’s Questionnaire Design Resource Centre. Though this increased the reliability of the questionnaire, and the pilot test could be included before finalizing the questions. The pilot test is able to reveal the potential problem when conducting the survey in the real world with low cost. And this can be considered as a good side of the questionnaire. 
-
-
-## Discussion of the methodology: 
-
-The target population for the 2017 GSS included all non-institutionalized persons 15 years of age and older in 10 provinces of Canada. As for the stratification for sampling, each of the ten provinces were divided into strata. Details of stratified sampling can be found in (Appendix C). The survey frame was created using two different components: lists of telephone numbers in use available to Statistics Canada from various sources; the Address Register: list of all dwellings within the ten provinces. The word “record” will refer to the grouping of telephone numbers that consists of our sampling unit on the survey frame. 
-The sampling approach is that each record in the survey frame was assigned to a stratum within its province. A simple random sample without replacement of records was next performed in each stratum. The sample formed by the above approach has the actual number of respondents to be 20,602. From this approach, some trade-offs may occur as it is very time consuming for gathering survey results. 
-The extent of non-response varies from partial non-response (failure to answer one or a few questions) to total non-response. Total non-response was handled by adjusting the weight of households who responded to the survey to compensate for those who did not respond. And partial non-response was included in the sample, this is one downside of the data. 
 
 ## Conclusion:
 
@@ -439,7 +455,7 @@ model.data <- augment(mysvyglm1) %>% mutate(index = 1:n())
 
 
 
-Table 4: This table displayed three  points which have the three largest cook's distance in the entire dataset. These values demonstrated that all the points in the dataset are not influtial points that effect the model preforming.
+Table 7: This table displayed three  points which have the three largest cook's distance in the entire dataset. These values demonstrated that all the points in the dataset are not influtial points that effect the model preforming.
 
 
 ```{r Cooks D, echo=FALSE}
@@ -468,7 +484,7 @@ ggplot(model.data, aes(index, .std.resid)) +
 **Variance Inflation Vector for Predictors:**
 
 
-Table 5: the variance inflation vectors for each predictor are listed. The result indicates that there is not multicollinearity between the variables, as the VIFs for predictors are all smaller than 5.
+Table 8: the variance inflation vectors for each predictor are listed. The result indicates that there is not multicollinearity between the variables, as the VIFs for predictors are all smaller than 5.
 
 ```{r multicollinearity, echo=FALSE}
 # Check the Multi-collinearity
@@ -479,3 +495,13 @@ kable(vif(mysvyglm1), caption = "Variance Inflation Vector")
 <font size = 4> **Appendix G** </font>
 
 **Github Repo Link:** https://github.com/Catherine1124k/Towards-an-analysis-of-self-rated-mental-health
+
+
+
+
+
+
+
+
+
+
