@@ -129,21 +129,6 @@ The numeric variables `age`, `feelings_life` and `worked_last_week`, and one cat
 It is also worth mentioning that since each of the variables in the data were used to identify the probability of good mental health, there was the possibility of collinearity between the variables (i.e. a number of variables measured common characteristics of self rated mental health). 
 
 
-
-
-## Discussion of the questionnaire:  
-
-The questionnaire for 2017 GSS contained 460 questions, meeting two key objectives: monitoring the change of living standard and well-being of Canadians over time and gathering the data of specified social policy issues. Details of the questions in the questionnaire can be found in (Appendix B).
-What is also worth mentioning is the underlying problems of the questionnaire. For telephone surveys, non-response is already increasingly prevalent. Unfortunately, the length of the GSS 2017 questionnaire raised the probability of non-response. 
-Since the GSS program was started from 1985, the questionnaire contained two types of questions: existing questions and new questions. Both of these two kinds of questions were tested by Statistic Canada’s Questionnaire Design Resource Centre. Though this increased the reliability of the questionnaire, and the pilot test could be included before finalizing the questions. The pilot test is able to reveal the potential problem when conducting the survey in the real world with low cost. And this can be considered as a good side of the questionnaire. 
-
-
-## Discussion of the methodology: 
-
-The target population for the 2017 GSS included all non-institutionalized persons 15 years of age and older in 10 provinces of Canada. As for the stratification for sampling, each of the ten provinces were divided into strata. Details of stratified sampling can be found in (Appendix C). The survey frame was created using two different components: lists of telephone numbers in use available to Statistics Canada from various sources; the Address Register: list of all dwellings within the ten provinces. The word “record” will refer to the grouping of telephone numbers that consists of our sampling unit on the survey frame. 
-The sampling approach is that each record in the survey frame was assigned to a stratum within its province. A simple random sample without replacement of records was next performed in each stratum. The sample formed by the above approach has the actual number of respondents to be 20,602. From this approach, some trade-offs may occur as it is very time consuming for gathering survey results. 
-The extent of non-response varies from partial non-response (failure to answer one or a few questions) to total non-response. Total non-response was handled by adjusting the weight of households who responded to the survey to compensate for those who did not respond. And partial non-response was included in the sample, this is one downside of the data. 
-
 The result of the logistic regression model is shown as below, in the table below:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 kable(summary(mysvyglm1)$coefficient, caption = "Logistic Regression Model Result")
@@ -274,6 +259,21 @@ mean(mysvyglm.classes == data1$new_mental_health)
 # Summary
 
 In this report, we demonstrate that the probability of having good mental health is negatively correlated with age, physical health, if people worked last week, and feelings of life. Under the logistic regression model, we built a tool for evaluating the probability of having good mental health based on above four factors. This potential can be used in Canada to assist the social changes related to living conditions and provide data to inform specific policy issues, which is the primary objective of the General Social Survey. It is hoped that in the future work, one can extend the model globally based on more global data. 
+
+## Discussion of the questionnaire:  
+
+The questionnaire for 2017 GSS contained 460 questions, meeting two key objectives: monitoring the change of living standard and well-being of Canadians over time and gathering the data of specified social policy issues. Details of the questions in the questionnaire can be found in (Appendix B).
+What is also worth mentioning is the underlying problems of the questionnaire. For telephone surveys, non-response is already increasingly prevalent. Unfortunately, the length of the GSS 2017 questionnaire raised the probability of non-response. 
+Since the GSS program was started from 1985, the questionnaire contained two types of questions: existing questions and new questions. Both of these two kinds of questions were tested by Statistic Canada’s Questionnaire Design Resource Centre. Though this increased the reliability of the questionnaire, and the pilot test could be included before finalizing the questions. The pilot test is able to reveal the potential problem when conducting the survey in the real world with low cost. And this can be considered as a good side of the questionnaire. 
+
+
+## Discussion of the methodology: 
+
+The target population for the 2017 GSS included all non-institutionalized persons 15 years of age and older in 10 provinces of Canada. As for the stratification for sampling, each of the ten provinces were divided into strata. Details of stratified sampling can be found in (Appendix C). The survey frame was created using two different components: lists of telephone numbers in use available to Statistics Canada from various sources; the Address Register: list of all dwellings within the ten provinces. The word “record” will refer to the grouping of telephone numbers that consists of our sampling unit on the survey frame. 
+The sampling approach is that each record in the survey frame was assigned to a stratum within its province. A simple random sample without replacement of records was next performed in each stratum. The sample formed by the above approach has the actual number of respondents to be 20,602. From this approach, some trade-offs may occur as it is very time consuming for gathering survey results. 
+The extent of non-response varies from partial non-response (failure to answer one or a few questions) to total non-response. Total non-response was handled by adjusting the weight of households who responded to the survey to compensate for those who did not respond. And partial non-response was included in the sample, this is one downside of the data. 
+
+##Conclusion##
 
 In this session, we will focus on discussing the main results of the model and interpretation of it. The following plots help us visualizing the dataset used in the model. First of all, Figure 1 shows the dataset from one variable `self_rated_mental_health`’s perspective, which is our main focus variable from the dataset. The variable `self_rated_mental_health` has 5 levels which are “Excellent”, “Very good”, “Good”, “Fair”, and “Poor”. We are interested in determining the probability of a person with good mental health(i.e., value of `self_rated_mental_health` is higher than “Good”) given predictor variables(i.e., `age`, `feelings_life`, `self_rated_health`, and `worked_last_week`). Moreover, Figure 2 is a pie chart showing that 60% of people in the data have a value higher than “Good”, and the rest 40% of them have a “Fair” or “Poor” mental health. Regarding possible bias of the dataset, one can find that the distribution of `self_rated_mental_health` is left skewed, with few values far to the left and closer to zero. Skewness of the data may imply the dataset is not representative enough if assuming the distribution of `self_rated_mental_health` is uniform. The logistic regression model results are shown in the previous result session.
 
