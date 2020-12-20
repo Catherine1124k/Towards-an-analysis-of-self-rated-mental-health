@@ -1,0 +1,219 @@
+---
+title: "Towards an analysis of self rated mental health"
+author: "Lingyue Kong"
+date: "12/12/2020"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(knitr)
+library(tidyverse)
+library(broom)
+library(car)
+library(survey)
+library(ggplot2)
+
+```
+
+
+```{r include=FALSE}
+## data preparation & data cleaning
+lastfm <- read.csv(file.choose(), header=T)
+dat <- lastfm
+data <- dat%>%dplyr::select(c(2, 41, 42, 39, 11,30,47))
+
+data <- data%>%filter( !is.na(self_rated_mental_health) & !is.na(self_rated_health) & 
+                       !is.na(income_family)&!is.na(feelings_life)&!is.na(worked_last_week)&!is.na(living_arrangement))
+
+
+data$feelings_life <- as.numeric(data$feelings_life)
+
+head(data)
+
+# view general data for 'self_rated_mental_health' variable
+summary(data)
+#create a new binary categorical variable for feelings_life(based on the median of 'feelings_life')
+states<-c("Good","Very good","Excellent")
+data<-data%>%mutate(worked_last_week = 
+           ifelse(worked_last_week=="Yes", 1, 0))
+data1 <- data%>%mutate(new_mental_health = ifelse(self_rated_mental_health%in% states, "good", "not so good"))%>%dplyr::select(age, feelings_life, new_mental_health, income_family, self_rated_health,living_arrangement,worked_last_week)
+data1$new_mental_health <- as.factor(data1$new_mental_health)
+
+# build a matrix contains all of the pairwise correlations
+cor(data1[, -c(3:6)])
+```
+
+
+
+```{r include=FALSE}
+n  <- nrow(data1)
+# N <- abs(diff(pop_info$VALUE))
+N <- 30633177
+fpc.srs <- rep(N, n)
+gss.design <- svydesign(id=~1, data=data1, fpc=fpc.srs)
+
+# design based logistic regression model
+mysvyglm <- svyglm(new_mental_health ~ age +feelings_life+as.factor(self_rated_health)+worked_last_week+as.factor(living_arrangement), 
+                   gss.design, family="binomial")
+summary(mysvyglm)
+
+
+# view the code for new_mental_health
+contrasts (data1$new_mental_health)
+
+
+mysvyglm1 <- svyglm(as.factor(new_mental_health) ~ age +feelings_life+as.factor(self_rated_health)+worked_last_week, 
+                   gss.design, family="binomial")
+summary(mysvyglm1)
+```
+
+```{r self rated mental health bar plot Appendix A, echo=FALSE, message=FALSE, warning=FALSE}
+data$self_rated_mental_health <- as.factor(data$self_rated_mental_health)
+data_health <- data%>% group_by(self_rated_mental_health) %>% summarise(count = n())
+
+data_health %>%
+  ggplot(aes (x= `self_rated_mental_health`, y=`count`)) + geom_col( colours = "light bule", fill = "light blue") +
+  labs(title="The Number of Sample Choose each option of Self rated mental health",
+       caption="Figure 1") + theme_light() + 
+  geom_text(aes(label= `count`, x=self_rated_mental_health, y=`count`*1.03), colour="black")
+```
+
+
+```{r new feel pie plot, echo=FALSE, message=FALSE, warning=FALSE}
+# Pie Chart from data frame with Appended Sample Sizes
+mytable <- table(data1$new_mental_health)
+lbls <- paste(names(mytable), "\n", mytable, sep="     ")
+pie(mytable, labels = lbls, 
+   main="Figure 2: Number of Observations in Each Level of New_Mental_Health")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(summary(mysvyglm1)$coefficient, caption = "Logistic Regression Model Result")
+```
+
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+par(mfrow = c(1, 2))
+plot(new_mental_health ~ age +feelings_life+as.factor(self_rated_health)+worked_last_week, data = data1, 
+     pch = "|",
+     main = "Figure 3: Model Result")
+```
+
+```{r include=FALSE}
+mysvyglm1.probs <- predict(mysvyglm1, type="response")
+head(mysvyglm1.probs, 10)
+
+#transfer the numeric prob into good & poor
+mysvyglm1.classes <- ifelse(mysvyglm1.probs > 0.5, "not so good", "good")
+head(mysvyglm1.classes, 10)
+
+# confusion matrix for m3
+table(mysvyglm1.classes, data1$age)
+
+# accuracy for m4
+mean(mysvyglm1.classes == data1$new_mental_health)
+
+
+
+mysvyglm.probs <- predict(mysvyglm, type="response")
+head(mysvyglm1.probs, 10)
+
+#transfer the numeric prob into good & poor
+mysvyglm.classes <- ifelse(mysvyglm.probs > 0.5, "not so good", "good")
+head(mysvyglm.classes, 10)
+
+# confusion matrix for m3
+table(mysvyglm.classes, data1$new_mental_health)
+
+# accuracy for m4
+mean(mysvyglm.classes == data1$new_mental_health)
+
+```
+
+```{r echo=FALSE}
+kable(data1%>%dplyr::select(c(-1:2))%>%summary(), 
+      caption = 'Summary Data Information for age, feelings_life, worked_last_week')
+
+kable(data1%>%group_by(self_rated_health)%>%count(), 
+      caption = "Number of Observations in self_rated_healt group")
+
+kable(data1%>%group_by(income_family)%>%count(), 
+      caption = "Number of Observations in income family group")
+
+kable(data1%>%group_by(living_arrangement)%>%count(), 
+      caption = "Number of Observations in living arrangement group")
+
+```
+
+```{r boxplot, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggpubr)
+b1 <- data %>%
+  ggplot(aes (x= `worked_last_week`)) + geom_boxplot( colours = "light bule") +
+  labs(title="Box plot for worked last_week",
+       caption="Figure 4.a") + theme_light()
+
+b2<- data %>%
+  ggplot(aes (x= `feelings_life`)) + geom_boxplot( colours = "light bule") +
+  labs(title="Box plot for feelings_life",
+       caption="Figure 4.b") + theme_light()
+
+b3 <- data %>%
+  ggplot(aes (x= `age`)) + geom_boxplot( colours = "light bule") +
+  labs(title="Box plot for age",
+       caption="Figure 4.c") + theme_light()
+
+figure <- ggarrange(b1, b2, b3,
+                    labels = c("A", "B", "C"),
+                    ncol = 2, nrow = 2)
+figure
+```
+
+```{r linear realtionship, echo=FALSE, message=FALSE, warning=FALSE}
+# Select only numeric predictors
+mydata <- data1 %>% dplyr::select_if(is.numeric)
+predictors <- colnames(mydata)
+
+# Bind the logit and tidying the data for plot
+mydata <- mydata %>%
+  mutate(logit = log(mysvyglm1.probs/(1 - mysvyglm1.probs))) %>%
+  gather(key = "predictors", value = "predictor.value", -logit)
+
+# View the Linearity assumption for the model
+ggplot(mydata, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess",formula = 'y ~ x') +
+  theme_bw() +
+  facet_wrap(~predictors, scales = "free_y") +
+  labs(title="The linear relationship between numerical variables and response variable",
+       caption="Figure 5")
+```
+
+```{r Cooks, echo=FALSE}
+
+# cook distance for leverage points
+plot(mysvyglm1, which = 4, id.n = 10, main = "Observations with their Cook's Distance", sub.caption = "Figure 6")
+# Extract model results
+model.data <- augment(mysvyglm1) %>% mutate(index = 1:n())
+```
+
+```{r Cooks D, echo=FALSE}
+# Pick out the three points with largest cook
+kable(model.data %>% dplyr::select(c(13, 12)) %>% top_n(3, .cooksd), caption = "Three Points with Largeat Cook's Distance")
+```
+
+```{r Cooks Distance, echo=FALSE}
+ggplot(model.data, aes(index, .std.resid)) +
+  geom_point(aes(color = data1$new_mental_health), alpha = .5) +
+  theme_light() + labs(title = "Standardized Residuals",
+       caption="Figure 7")
+```
+
+```{r multicollinearity, echo=FALSE}
+# Check the Multi-collinearity
+kable(vif(mysvyglm1), caption = "Variance Inflation Vector")
+```
