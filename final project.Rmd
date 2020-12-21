@@ -99,6 +99,7 @@ This study paid particular attention to the mental health with respect to the nu
 
 The aim of this study was primarily to determine whether there were some factors that could contribute significantly to the mental health of people. If so, it would be of interest to be able to define which factor can best confirm such measurement. The goal of the study was to use these factors as associated with 2017 GSS to develop a standardized tool for the evaluation of probability of people have a good mental health. Also, in this report, the analysis was conducted in @R and figures were produced using the package @ggplot2.
 
+\newpage
 
 # Data
 
@@ -318,24 +319,24 @@ This model will represent the small world to an extent of people in Canada. In t
 
 
 
-
 \newpage
 
 # Reference
 
-**1.** Data source: 2017 General Social Survey (GSS): Families Cycle 31, provided by Statistics Canada under the terms of the Data Liberation
+<div id="refs"></div>
 
-**2.** Gss31_user_Guide of 2017 General Social Survey (GSS): Families Cycle 31 https://sda-artsci-utoronto-ca.myaccess.library.utoronto.ca/sdaweb/dli2/gss/gss31/gss31/more_doc/GSS31_User_Guide.pdf
+Data source: 2017 General Social Survey (GSS): Families Cycle 31, provided by Statistics Canada under the terms of the Data Liberation
+
+Gss31_user_Guide of 2017 General Social Survey (GSS): Families Cycle 31 https://sda-artsci-utoronto-ca.myaccess.library.utoronto.ca/sdaweb/dli2/gss/gss31/gss31/more_doc/GSS31_User_Guide.pdf
 
 
-**3.** Wu, C., & Thompson, M. E. (2020). Sampling Theory and Practice (ICSA Book Series in Statistics) (1st ed. 2020 ed.). Springer.
+Wu, C., & Thompson, M. E. (2020). Sampling Theory and Practice (ICSA Book Series in Statistics) (1st ed. 2020 ed.). Springer.
 
-**4.** James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An Introduction to Statistical Learning: with Applications in R (Springer Texts in Statistics) (1st ed. 2013, Corr. 7th printing 2017 ed.). Springer.
+James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An Introduction to Statistical Learning: with Applications in R (Springer Texts in Statistics) (1st ed. 2013, Corr. 7th printing 2017 ed.). Springer.
 
-**5.** (2018, March 11). Logistic Regression Assumptions and Diagnostics in R. Articles - STHDA. http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
+(2018, March 11). Logistic Regression Assumptions and Diagnostics in R. Articles - STHDA. http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
 
-**6.** Population Data Source: Statistics Canada. Table 17-10-0005-01 Population estimates on July 1st, by age and sex  DOI: https://doi.org/10.25318/1710000501-eng.
-
+Population Data Source: Statistics Canada. Table 17-10-0005-01 Population estimates on July 1st, by age and sex  DOI: https://doi.org/10.25318/1710000501-eng.
 
 \newpage
 
