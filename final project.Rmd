@@ -22,14 +22,14 @@ library(ggplot2)
 library(boot)
 library(table1)
 library(rvest)
+library(arm)
 
 ```
 
 
 ```{r include=FALSE}
 ## data preparation & data cleaning
-lastfm <- read.csv(file.choose(), header=T)
-dat <- lastfm
+dat <- read.csv('~/Desktop/gss.csv')
 data <- dat%>%dplyr::select(c(2, 41, 42, 39, 11,30,47))
 
 data <- data%>%filter( !is.na(self_rated_mental_health) & !is.na(self_rated_health) & 
@@ -46,7 +46,15 @@ summary(data)
 states<-c("Good","Very good","Excellent")
 data<-data%>%mutate(worked_last_week = 
            ifelse(worked_last_week=="Yes", 1, 0))
-data1 <- data%>%mutate(new_mental_health = ifelse(self_rated_mental_health%in% states, "good", "not so good"))%>%dplyr::select(age, feelings_life, new_mental_health, income_family, self_rated_health,living_arrangement,worked_last_week)
+data<-
+  data %>%
+  mutate(new_mental_health1 =case_when(
+    self_rated_mental_health == "Excellent" ~ 5,
+    self_rated_mental_health == "Very good" ~ 4,
+    self_rated_mental_health == "Good" ~ 3,
+    self_rated_mental_health == "Fair" ~ 2,
+    TRUE ~ 0))
+data1 <- data%>%mutate(new_mental_health = ifelse(self_rated_mental_health%in% states, "good", "not so good"))%>%dplyr::select(age, feelings_life, new_mental_health, income_family, self_rated_health,living_arrangement,worked_last_week,new_mental_health1)
 data1$new_mental_health <- as.factor(data1$new_mental_health)
 
 # build a matrix contains all of the pairwise correlations
@@ -100,7 +108,6 @@ This study paid particular attention to the mental health with respect to the nu
 The aim of this study was primarily to determine whether there were some factors that could contribute significantly to the mental health of people. If so, it would be of interest to be able to define which factor can best confirm such measurement. The goal of the study was to use these factors as associated with 2017 GSS to develop a standardized tool for the evaluation of probability of people have a good mental health. Also, in this report, the analysis was conducted in @R and figures were produced using the package @ggplot2.
 
 \newpage
-
 # Data
 
 ## Key features of the data: 
@@ -257,6 +264,92 @@ plot(new_mental_health ~ age +feelings_life+as.factor(self_rated_health)+worked_
 ```
 **Figure 3:** These four plots are demonstrating how the probability obtained from the logistic model varies as the predictors value changes. The X axis is representing the values for numerical predictors(`age`, `feelings_life`, `worked_last_week`). As for the categorical predictor, `self_rated_health`, the x-axis is divided into 5 bar, indicating 5 different mental health groups. The y-axis shows the probability of Canadians having good mental health. The dark-gray area represents the proportion of people having not so good mental health within that group, while the light area is for people having good mental health. By viewing the change of the dark-grey area, the general relationship between `new mental health` and the predictors.
 
+The casual inference between the self rated mental health and the workload should also be analyzed since 
+as the above result shown, if people worked last week would decrease the rate of mental health, however, there were many factors may affect the trend, for example, between young people and old people, if they all worked last week adn the rate of the mental health increases, this could not tell any story, because old people tend to love their jobs more than younger people, they may be more resilient at work, and therefore have higher levels of mental health. Therefore, I chose to use `Difference-in-Difference`here to discover the casual inference between the self rated mental health and the workload, and then I got the graph below.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+diff_in_diff_example_data=data1
+diff_in_diff_example_data$treatment_group <- 
+  data1$worked_last_week
+
+diff_in_diff_example_data$year <- 
+  ifelse(data1$age >= 30, 1, 0)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+diff_in_diff_example_data %>% 
+  ggplot(aes(x = year,
+             y = data1$new_mental_health1,
+             color = as.factor(treatment_group))) +
+  geom_point() +
+  geom_line(aes(group = nrow(data1)), alpha=10) +
+  theme_minimal() +
+  labs(x = "Age",
+       y = "Mental health",
+       color = "Person worked last week") +
+  scale_color_brewer(palette = "Set1")
+```
+**Figure 4:** This figure demonstrate the difference between how `worked_last_week` effects the `mental_health` when the `age` was controlled. The x-axis is the `age` variable and if the age is higher than 30, it turns out 1, and others will turns out to be 0. The y-axis is the `new_mental_health1` variable. Here, I group them into five groups from "Excellent" to "Poor" and the rates are 0 to 5. The blue lines were people who worked last week and the red one is not. From the figure, we could find out that, when people in the same age group, people who worked last week would have slightly higher rate of mental health than others who do not.
+
+Then, we could find out what is the exact number which discribe the relationship between the `new_mental_health` and the `worked_last_week`.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+diff_in_diff_example_regression <- 
+  lm(data1$new_mental_health1 ~ treatment_group*year, 
+     data = diff_in_diff_example_data)
+
+kable(tidy(diff_in_diff_example_regression))
+
+```
+
+This table shows that when people in same age group, if they worked last week, the self rated mental health will be 0.0084 higher than they do not.
+
+Explore more about how the `worked_last_week` effect the `new_mental_health`, and this time we control all other variables fixed and check what will the `worked_last_week` changes the `new_mental_health`, which is the method of `Matching-Propensity-Score`.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+propensity_score <- glm(new_mental_health ~ age + feelings_life +self_rated_health+worked_last_week, 
+                        family = binomial,
+                        data = data1)
+
+prop_data <- 
+  augment(propensity_score, 
+          data = data1,
+          type.predict = "response") %>% 
+  dplyr::select(-.resid, -.std.resid, -.hat, -.sigma, -.cooksd) 
+
+prop_data <- 
+  prop_data %>% 
+  arrange(.fitted, new_mental_health)
+prop_data$treated <- 
+  data1$worked_last_week
+
+prop_data$treated <- 
+  as.integer(prop_data$treated)
+
+matches <- arm::matching(z = prop_data$treated, 
+                         score = prop_data$.fitted)
+
+prop_data <- cbind(prop_data, matches)
+
+prop_data_matched <- 
+  prop_data %>% 
+  filter(match.ind != 0) 
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+propensity_score_regression <- 
+  lm(new_mental_health1 ~ age + feelings_life + self_rated_health + worked_last_week, 
+                data = prop_data_matched)
+
+kable(huxtable::huxreg(propensity_score_regression))
+
+```
+
+Here is what we got if we control the `age`, `feelings_life`, and `self_rated_health` fixed, the `worked_last_week` would increase 0.079 in the `new_mental_health`, and we could also found that the `p-value` is (0.013) which is smaller than the 0.5, so this is a significant predictor to the `new_mental_health`.
+
 
 ```{r include=FALSE}
 mysvyglm1.probs <- predict(mysvyglm1, type="response")
@@ -297,25 +390,25 @@ mean(mysvyglm.classes == data1$new_mental_health)
 
 In this report, we demonstrate that the probability of having good mental health is negatively correlated with age, physical health, if people worked last week, and feelings of life. Under the logistic regression model, we built a tool for evaluating the probability of having good mental health based on above four factors. This potential can be used in Canada to assist the social changes related to living conditions and provide data to inform specific policy issues, which is the primary objective of the General Social Survey. It is hoped that in the future work, one can extend the model globally based on more global data. 
 
+To sum up all relationships between predictor variables and the probability of having good mental health, it is interesting that all four variables are negatively correlated with the log odds of having good mental health. From the model, one can learn that if the person worked more, had better physical health, felt more satisfied about life and is older, he or she tends to have worse mental health. In reality, having more work is associated with higher pressure and trivial matters, which will lead to worse mental health. However, according to the `DID` and `Matching-Propensity-Score` methods, we could find that the relationship between the `worked_last_week` is opposite to the logistic model. This may indicates that,when age, life satisfaction, and physical health remained the same, increasing work was associated with a certain increase in mental health self-assessment, but when all three factors were changed, such as age or physical health injury, increasing work was associated with a decrease in mental health score. Back to the reality, when people get older, they suffer from a lot of diseases, so they have anxiety about them. Also, they will lose interest in life and feel lonely, and will also lead to bad mental health. It is very interesting when talking feeling of life satisfaction and physical health into consideration, it has a negative impact on having a good mental health. Perhaps, having a high satisfaction about life and a good body will let people ignore the importance of the mental health and not having a good mental health eventually.
 
 ## Conclusion:
 
-In this session, we will focus on discussing the main results of the model and interpretation of it. The following plots help us visualizing the dataset used in the model. First of all, Figure 1 shows the dataset from one variable `self_rated_mental_health`’s perspective, which is our main focus variable from the dataset. The variable `self_rated_mental_health` has 5 levels which are “Excellent”, “Very good”, “Good”, “Fair”, and “Poor”. We are interested in determining the probability of a person with good mental health(i.e., value of `self_rated_mental_health` is higher than “Good”) given predictor variables(i.e., `age`, `feelings_life`, `self_rated_health`, and `worked_last_week`). Moreover, Figure 2 is a pie chart showing that 60% of people in the data have a value higher than “Good”, and the rest 40% of them have a “Fair” or “Poor” mental health. Regarding possible bias of the dataset, one can find that the distribution of `self_rated_mental_health` is left skewed, with few values far to the left and closer to zero. Skewness of the data may imply the dataset is not representative enough if assuming the distribution of `self_rated_mental_health` is uniform. The logistic regression model results are shown in the previous result session.
+In this session, we will focus on discussing the main results of the model and interpretation of it. The following plots help us visualizing the dataset used in the model. First of all, Figure 1 shows the dataset from one variable `self_rated_mental_health`’s perspective, which is our main focus variable from the dataset. The variable `self_rated_mental_health` has 5 levels which are “Excellent”, “Very good”, “Good”, “Fair”, and “Poor”. We are interested in determining the probability of a person with good mental health(i.e., value of `self_rated_mental_health` is higher than “Good”) given predictor variables(i.e., `age`, `feelings_life`, `self_rated_health`, and `worked_last_week`). Moreover, Figure 2 is a pie chart showing that 60% of people in the data have a value higher than “Good”, and the rest 40% of them have a “Fair” or “Poor” mental health. Regarding possible bias of the dataset, one can find that the distribution of `self_rated_mental_health` is left skewed, with few values far to the left and closer to zero. Skewness of the data may imply the dataset is not representative enough if assuming the distribution of `self_rated_mental_health` is uniform. The logistic regression model results are shown in the previous result session. The causal inference was also be described above, and the result shown that the `worked_last_week` do increase the value of the `new_mental_health` without the factor of the age, and if for people who in the same age group, as long as they worked last week, the self rated mental health will increase about 0.0084 than others. After that, if all other three factors remain the fixed, according to the `matching propensity score` method, we could found that the `worked_last_week` would increase 0.079 in the `new_mental_health`. All of these results show that the `worked_last_week` would increase the `new_mental_health`.
 
 It is stated by James, G. (2013) that the estimated intercept is typically not of interest; its main purpose is to adjust the average fitted probabilities to the proportion of ones in the data. So in this model for the probability of having good mental health, the intercept with value -0.365 . In terms of age, for every additional year increase in age, it is expected that the log adds of having good mental health to decrease by 0.0289(i.e., probability of having good mental health is negatively related with age). 
 
 Similarly for estimates associated with `feelings_life` and `worked_last_week`, the probability of having good mental health is also negatively related with those two predictor variables. For every additional unit increase in `feelings_life`, it is expected that the log adds of having good mental health to decrease by 0.49. And for more people worked last week, it is expected that the log adds of having good mental health to decrease by 0.032. “Dummy” variable is used for categorical variable `self_rated_health`, and if the person is in `self_rated_health` group 1, then it is expected that the log adds of having good mental health to decrease by 1.71. However, for self rated mental health group 2 and 4, it is expected that the log adds of being to increase by 1.06 and 1.18 respectively. It is shown that `self_rated_health` is negatively related with having good mental health, it suggested that if a person feels more satisfied about life, then he or she is less likely to be having a better mental health.
 
-To sum up all relationships between predictor variables and the probability of having good mental health, it is interesting that all four variables are negatively correlated with the log odds of having good mental health. From the model, one can learn that if the person worked more, had better physical health, felt more satisfied about life and is older, he or she tends to have worse mental health. In reality, having more work is associated with higher pressure and trivial matters, which will lead to worse mental health. When people get older, they suffer from a lot of diseases, so they have anxiety about them. Also, they will lose interest in life and feel lonely, and will also lead to bad mental health. It is very interesting when talking feeling of life satisfaction and physical health into consideration, it has a negative impact on having a good mental health. Perhaps, having a high satisfaction about life and a good body will let people ignore the importance of the mental health and not having a good mental health eventually.
-
 
 ## Weakness & Next Steps: 
 
-Any missing values in the data were imputed as “Not Stated” or “Don’t Know”. While the assumption under which these imputations were conducted was probably reasonable, it may have been useful to perform a sensitivity analysis to determine whether such an imputation had a drastic effect on the results of the analyses. Moreover, here are some variables that have an impact on mental health in real life, such as individual's marital status, living environment and educational background, etc. However, because the values were too small in the p-test process, they were considered as insignificant variables, so they were deleted when the model was built. However, perhaps these variables have some influence on the model, and if deleted, some information may be missed.
+Any missing values in the data were imputed as “Not Stated” or “Don’t Know”. While the assumption under which these imputations were conducted was probably reasonable, it may have been useful to perform a sensitivity analysis to determine whether such an imputation had a drastic effect on the results of the analyses. Moreover, here are some variables that have an impact on mental health in real life, such as individual's marital status, living environment and educational background, etc. However, because the values were too small in the p-test process, they were considered as insignificant variables, so they were deleted when the model was built. However, perhaps these variables have some influence on the model, and if deleted, some information may be missed. Here, the predictor `self_rated_mental_health` was rated by the responsers themselves, and the outcomes were just the scores from 1 to 10 which were subjectivity in this measurement, and this may effect the result of our final model since the numbers may not accurate to their exact mental health level.
 
-Here, the predictor `self_rated_mental_health` was rated by the responsers themselves, and the outcomes were just the scores from 1 to 10 which were subjectivity in this measurement, and this may effect the result of our final model since the numbers may not accurate to their exact mental health level.
+Here, I only choose to have a more in-depth discussion on the impact of workload on mental health when other factors remain the same. I do not have a deeper discussion on the other three factors, and many outcomes may be more different if we understand them. At the same time, there must be more than these three factors affecting the work, maybe there are more and more important factors that I did not include, which may also affect the final result. 
 
 This model will represent the small world to an extent of people in Canada. In terms of the whole world, this model may not perform well, as different countries have different living conditions and measurements. It is limited to the society of Canada, and may not be able to use it globally. As for future work, opportunity is there to gather more information and data from different countries across the world. Therefore, future opportunities can focus on extending the model globally.
+
 
 
 
@@ -338,6 +431,9 @@ James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An Introduction to S
 
 Population Data Source: Statistics Canada. Table 17-10-0005-01 Population estimates on July 1st, by age and sex  DOI: https://doi.org/10.25318/1710000501-eng.
 
+Neverknowhen. (n.d.). Neverknowhen/Towards-a-logistic-analysis-of-satisfication-of-lifes. Retrieved December 21, 2020, from https://github.com/neverknowhen/Towards-a-logistic-analysis-of-satisfication-of-lifes
+
+
 \newpage
 
 # Appendix
@@ -347,7 +443,7 @@ Population Data Source: Statistics Canada. Table 17-10-0005-01 Population estima
 **Data Summary for Variables Used In the Model:**
 
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 kable(data1%>%dplyr::select(c(-1:2))%>%summary(), 
       caption = 'Summary Data Information for age, feelings_life, worked_last_week')
 
@@ -367,17 +463,17 @@ library(ggpubr)
 b1 <- data %>%
   ggplot(aes (x= `worked_last_week`)) + geom_boxplot( colours = "light bule") +
   labs(title="Box plot for worked last_week",
-       caption="Figure 4.a") + theme_light()
+       caption="Figure 5.a") + theme_light()
 
 b2<- data %>%
   ggplot(aes (x= `feelings_life`)) + geom_boxplot( colours = "light bule") +
   labs(title="Box plot for feelings_life",
-       caption="Figure 4.b") + theme_light()
+       caption="Figure 5.b") + theme_light()
 
 b3 <- data %>%
   ggplot(aes (x= `age`)) + geom_boxplot( colours = "light bule") +
   labs(title="Box plot for age",
-       caption="Figure 4.c") + theme_light()
+       caption="Figure 5.c") + theme_light()
 
 figure <- ggarrange(b1, b2, b3,
                     labels = c("A", "B", "C"),
@@ -435,7 +531,7 @@ ggplot(mydata, aes(logit, predictor.value))+
   theme_bw() +
   facet_wrap(~predictors, scales = "free_y") +
   labs(title="The linear relationship between numerical variables and response variable",
-       caption="Figure 5")
+       caption="Figure 6")
 ```
 
 \newpage
@@ -451,7 +547,7 @@ Figure 5: This plot illustrated cook distances for leverage points of the sample
 ```{r Cooks, echo=FALSE}
 
 # cook distance for leverage points
-plot(mysvyglm1, which = 4, id.n = 10, main = "Observations with their Cook's Distance", sub.caption = "Figure 6")
+plot(mysvyglm1, which = 4, id.n = 10, main = "Observations with their Cook's Distance", sub.caption = "Figure 7")
 # Extract model results
 model.data <- augment(mysvyglm1) %>% mutate(index = 1:n())
 ```
@@ -476,7 +572,7 @@ Figure 6: This is a plot of residuals versus predicted (or fitted) values for th
 ggplot(model.data, aes(index, .std.resid)) +
   geom_point(aes(color = data1$new_mental_health), alpha = .5) +
   theme_light() + labs(title = "Standardized Residuals",
-       caption="Figure 7")
+       caption="Figure 8")
 ```
 
 
@@ -498,13 +594,3 @@ kable(vif(mysvyglm1), caption = "Variance Inflation Vector")
 <font size = 4> **Appendix G** </font>
 
 **Github Repo Link:** https://github.com/Catherine1124k/Towards-an-analysis-of-self-rated-mental-health
-
-
-
-
-
-
-
-
-
-
