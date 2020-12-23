@@ -298,7 +298,7 @@ diff_in_diff_example_regression <-
   lm(data1$new_mental_health1 ~ treatment_group*year, 
      data = diff_in_diff_example_data)
 
-kable(tidy(diff_in_diff_example_regression))
+kable(tidy(diff_in_diff_example_regression), caption= "Difference-in-Difference Result")
 
 ```
 
@@ -343,7 +343,7 @@ propensity_score_regression <-
   lm(new_mental_health1 ~ age + feelings_life + self_rated_health + worked_last_week, 
                 data = prop_data_matched)
 
-kable(huxtable::huxreg(propensity_score_regression))
+kable(huxtable::huxreg(propensity_score_regression), caption="Mathching Propensity Score Result")
 
 ```
 
